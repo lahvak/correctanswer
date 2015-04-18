@@ -1,0 +1,162 @@
+% \def\EmailAddress{jhlavace@svsu.edu}
+% \iffalse meta-comment
+% 
+% Program correctanswer  
+% Copyright (C) 2013 Jan Hlavacek
+%
+% This program may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.2
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%    http://www.latex-project.org/lppl.txt
+% and version 1.2 or later is part of all distributions of LaTeX 
+% version 1999/12/01 or later.
+%
+% The Program's files are correctanswer.dtx, correctanswer.ins and
+% correctanswer.sty.
+%
+% Run latex with the input file correctanswer.ins to generate the correctanswer.sty 
+% package file. Run latex with the input file correctanswer.dtx to generate the 
+% package documentation.
+%
+% \fi
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{correctanswer.dtx}
+%</driver>
+%<package,ls>\NeedsTeXFormat{LaTeX2e}
+%<package>\ProvidesPackage{correctanswer}
+%<*package>
+        [2014/07/16 v1.01 Package for keeping track of correct answer in
+	multiple choice exams]
+%</package>
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage[]{correctanswer}[2014/07/16]
+\usepackage{hyperref}
+\EnableCrossrefs         
+\CodelineIndex
+\RecordChanges
+\begin{document}
+\DocInput{correctanswer.dtx}
+\PrintChanges
+\PrintIndex
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{correctanswer.dtx}
+%
+% \DoNotIndex{\newcommand,\newenvironment}
+%
+% \changes{1.00}{2007/07/30}{Rewrote as a .dtx file for distribution}
+% \changes{1.01}{2014/07/16}{Added a watermark option}
+%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% \title{\bf The \textsf{correctanswer} Package\thanks{This document
+%        describes the version number \fileversion, last
+%        revised \filedate.}}
+%
+% \author{Jan Hlavacek\\ 
+% \small Email: \texttt{\EmailAddress}}
+% \date{16 July 2014}
+% \maketitle
+%
+% Blah blah blah
+%
+% Todo: 
+% \begin{enumerate}
+% \item Write the actual documentation
+% \item Rewrite the logic part to print watermark only if solutions actually
+% printed
+% \end{enumerate}
+% \StopEventually{}
+%
+% \section{Implementation}
+%
+% First we will process options:
+%    \begin{macrocode}
+\newif\ifCAHere
+\CAHerefalse
+\DeclareOption{here}{\CAHeretrue}
+\newif\ifCAMargin
+\CAMarginfalse
+\DeclareOption{margin}{\CAMargintrue}
+\newif\ifCAEnd
+\CAEndfalse
+\DeclareOption{end}{\CAEndtrue}
+\newif\ifWatermark
+\Watermarkfalse
+\DeclareOption{watermark}{\Watermarktrue}
+\ProcessOptions
+%    \end{macrocode}
+%
+% Load some packages we need
+%    \begin{macrocode}
+\RequirePackage{xparse}
+\RequirePackage{expl3}
+\ExplSyntaxOn
+\ifCAMargin
+\RequirePackage{marginnote}
+\fi
+\ifWatermark
+\RequirePackage[printwatermark]{xwatermark}
+\newwatermark[allpages,fontfamily=bch,color=gray!25,angle=45,scale=3,xpos=0,ypos=0]{Solutions}
+\fi
+\ifCAEnd
+\tl_new:N\g_correctanswer_tl
+\tl_gset:Nn \g_correctanswer_tl {\begin{description}}
+\fi
+%    \end{macrocode}
+%
+% \begin{macro}{\Correct}
+% Keep track of correct answer
+%    \begin{macrocode}
+\NewDocumentCommand\correct{ O{Problem\ \labelenumi} d() m }
+   {
+   \ifCAHere Correct: \textbf{#3}\fi
+   \ifCAMargin 
+   \IfNoValueTF{#2}
+   {\marginnote{#3}}
+   {\marginnote{#3}[#2]}
+   \fi
+   \ifCAEnd
+   \tl_gput_right:Nn \g_correctanswer_tl { \item[ }
+   \tl_gput_right:Nx \g_correctanswer_tl { #1 }
+   \tl_gput_right:Nn \g_correctanswer_tl { :] #3 }
+   \fi
+   }
+%    \end{macrocode}
+% \end{macro}
+%
+% Set up printing correct answers at the end, if required
+% \begin{macro}
+\ifCAEnd
+\AtEndDocument{\newpage
+\tl_gput_right:Nn \g_correctanswer_tl { \end{description} }
+\tl_use:N \g_correctanswer_tl
+}
+\ExplSyntaxOff
+\fi
+% \end{macro}
+% \Finale
+
+\endinput 
